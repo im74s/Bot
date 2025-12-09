@@ -29,12 +29,12 @@ async def promote(client, message: Message):
         can_invite_users=True,
         can_restrict_members=True,
         can_pin_messages=True,
-        can_promote_members=True,
+        can_promote_members=False,
         can_manage_chat=True,
         can_manage_video_chats=True,
         can_post_messages=True,
         can_edit_messages=True,
-        is_anonymous=True
+        is_anonymous=False
     )
 
     try:
