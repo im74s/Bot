@@ -1,4 +1,3 @@
-```python name=bot/handlers/admin.py
 """
 bot/handlers/admin.py
 
@@ -372,4 +371,3 @@ async def cmd_demote(client: Client, message: Message):
         await message.reply_text(f"User {target_user.mention} has been demoted.")
     except RPCError as e:
         await message.reply_text(f"Failed to demote {target_user.mention}: {e}")
-```
