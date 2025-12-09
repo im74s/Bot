@@ -6,7 +6,7 @@ from Commands import Admin  # adjust if your file is Admin.py
 # -------------------------------
 API_ID = 22071176               # Your API_ID
 API_HASH = "7ed5401b625a0a4d3c45caf12c87f166"  # Your API_HASH
-BOT_TOKEN = "8248367956:AAEd42MVgLX-EMZVWVSU0tCx2-_vW4mCkxI"  # Your bot token
+BOT_TOKEN = "7918136133:AAEdGPNoeRAtory8zUGKR8-dBU6GAJNQ5D8"  # Your bot token
 # -------------------------------
 
 # Create the Pyrogram client
