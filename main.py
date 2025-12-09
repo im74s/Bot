@@ -1,4 +1,19 @@
 from pyrogram import Client
+import logging
+
+# -------------------------------
+# CONFIGURE LOGGING FIRST
+# -------------------------------
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),  # Print to console
+        logging.FileHandler('bot.log')  # Save to file
+    ]
+)
+
+logger = logging.getLogger(__name__)
 
 # -------------------------------
 # CONFIG - Your Telegram API info
@@ -21,6 +36,14 @@ app = Client(
 from Commands import register_all
 
 if __name__ == "__main__":
-    print("Bot is starting... Registering commands...")
+    logger.info("=" * 50)
+    logger.info("Bot is starting...")
+    logger.info("Registering commands...")
+    logger.info("=" * 50)
+    
     register_all.register(app)
+    
+    logger.info("All commands registered successfully!")
+    logger.info("Bot is now running...")
+    
     app.run()
