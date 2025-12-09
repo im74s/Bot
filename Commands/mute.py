@@ -1,36 +1,36 @@
-from pyrogram.types import Message, ChatPermissions
+from pyrogram import filters
+from pyrogram.handlers import MessageHandler
+from . import utils
+import datetime
 
-async def mute(client, message: Message):
-    chat_id = message.chat.id
-    if message.reply_to_message and message.reply_to_message.from_user:
-        target_user_id = message.reply_to_message.from_user.id
-    else:
-        parts = message.text.split(None, 1)
-        if len(parts) < 2:
-            await message.reply("Usage: /mute <user_id|@username> or reply to a user")
-            return
-        arg = parts[1].strip()
-        try:
-            if arg.isdigit():
-                target_user_id = int(arg)
-            else:
-                user = await client.get_users(arg)
-                target_user_id = user.id
-        except Exception:
-            await message.reply("Could not find the specified user.")
-            return
+COMMAND_INFO = {"name": "/mute", "desc": "Mute a user for X minutes.", "usage": "/mute <minutes> <reply or @username>", "scope": "Group admins only", "example": "/mute 10 (reply)"}
 
+async def handler(client, message):
+    if not await utils.is_group_admin(client, message):
+        await message.reply_text("Admins only.")
+        return
+    args = message.text.split(maxsplit=2)
+    if len(args) < 2:
+        await message.reply_text("Usage: /mute <minutes> <reply or @username>")
+        return
     try:
-        await client.restrict_chat_member(
-            chat_id,
-            target_user_id,
-            permissions=ChatPermissions(
-                can_send_messages=False,
-                can_send_media_messages=False,
-                can_send_other_messages=False,
-                can_add_web_page_previews=False,
-            ),
-        )
-        await message.reply("User muted successfully.")
+        minutes = int(args[1])
+    except:
+        await message.reply_text("Invalid minutes value.")
+        return
+    target = message.reply_to_message.from_user if message.reply_to_message else None
+    if not target and len(args) < 3:
+        await message.reply_text("Reply or provide username to mute.")
+        return
+    if not target:
+        target = await client.get_users(args[2])
+    until = datetime.datetime.utcnow() + datetime.timedelta(minutes=minutes)
+    try:
+        await client.restrict_chat_member(message.chat.id, target.id, until_date=until, can_send_messages=False)
+        await message.reply_text("User muted.")
     except Exception as e:
-        await message.reply(f"Failed to mute user: {e}")
+        await message.reply_text(f"Failed to mute: {e}")
+
+
+def register(app):
+    app.add_handler(MessageHandler(handler, filters.command(["mute"]) & filters.group))

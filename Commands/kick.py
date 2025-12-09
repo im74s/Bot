@@ -1,40 +1,28 @@
 from pyrogram import filters
-from pyrogram.types import ChatPermissions, Message
+from pyrogram.handlers import MessageHandler
+from . import utils
 
-async def kick(client, message: Message):
-    chat_id = message.chat.id
-    # determine target user
-    if message.reply_to_message and message.reply_to_message.from_user:
-        target_user_id = message.reply_to_message.from_user.id
-    else:
-        parts = message.text.split(None, 1)
-        if len(parts) < 2:
-            await message.reply("Usage: /kick <user_id|@username> or reply to a user")
-            return
-        arg = parts[1].strip()
-        try:
-            if arg.isdigit():
-                target_user_id = int(arg)
-            else:
-                user = await client.get_users(arg)
-                target_user_id = user.id
-        except Exception:
-            await message.reply("Could not find the specified user.")
-            return
+COMMAND_INFO = {"name": "/kick", "desc": "Kick a user (group admins only).", "usage": "/kick <reply or @username>", "scope": "Group admins only", "example": "/kick @user"}
 
-    # permission checks: only admins can invoke
+async def handler(client, message):
+    if not await utils.is_group_admin(client, message):
+        await message.reply_text("Admins only: this command works in groups for group admins.")
+        return
+    target = message.reply_to_message.from_user if message.reply_to_message else None
+    if not target:
+        args = message.text.split(maxsplit=1)
+        if len(args) > 1:
+            target = await client.get_users(args[1])
+    if not target:
+        await message.reply_text("Usage: /kick <reply or @username>")
+        return
     try:
-        invoker = await client.get_chat_member(chat_id, message.from_user.id)
-        if invoker.status not in ("administrator", "creator"):
-            await message.reply("You must be an admin to use this command.")
-            return
-    except Exception:
-        pass
-
-    # kick = ban then unban so user can rejoin
-    try:
-        await client.ban_chat_member(chat_id, target_user_id)
-        await client.unban_chat_member(chat_id, target_user_id)
-        await message.reply("User kicked successfully.")
+        await client.kick_chat_member(message.chat.id, target.id)
+        await client.unban_chat_member(message.chat.id, target.id)
+        await message.reply_text("User kicked.")
     except Exception as e:
-        await message.reply(f"Failed to kick user: {e}")
+        await message.reply_text(f"Failed to kick: {e}")
+
+
+def register(app):
+    app.add_handler(MessageHandler(handler, filters.command(["kick"]) & filters.group))
