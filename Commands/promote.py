@@ -1,4 +1,4 @@
-from pyrogram.types import Message
+from pyrogram.types import Message, ChatPrivileges
 
 async def promote(client, message: Message):
     chat_id = message.chat.id
@@ -22,21 +22,20 @@ async def promote(client, message: Message):
             await message.reply("Could not find the specified user.")
             return
 
-    # Define privileges (Pyrogram 2.x)
-    privileges = {
-        "is_anonymous": False,
-        "can_manage_chat": False,
-        "can_delete_messages": True,
-        "can_manage_video_chats": False,
-        "can_restrict_members": True,
-        "can_promote_members": False,
-        "can_change_info": True,
-        "can_invite_users": True,
-        "can_pin_messages": True,
-        "can_post_messages": False,
-        "can_edit_messages": False,
-        "can_manage_topics": True
-    }
+    # Create ChatPrivileges object
+    privileges = ChatPrivileges(
+        can_change_info=True,
+        can_delete_messages=True,
+        can_invite_users=True,
+        can_restrict_members=True,
+        can_pin_messages=True,
+        can_promote_members=False,
+        can_manage_chat=False,
+        can_manage_video_chats=False,
+        can_post_messages=False,
+        can_edit_messages=False,
+        can_manage_topics=True
+    )
 
     try:
         await client.promote_chat_member(
