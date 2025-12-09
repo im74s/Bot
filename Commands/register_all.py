@@ -6,6 +6,7 @@ ADMIN_COMMANDS = []
 
 # List of command module names to import and register
 _USER_MODULES = [
+    "testadmin",
     "start",
     "ping",
     "echo",
