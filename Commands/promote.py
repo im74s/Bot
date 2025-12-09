@@ -22,7 +22,7 @@ async def promote(client, message: Message):
             await message.reply("Could not find the specified user.")
             return
 
-    # Create ChatPrivileges object
+    # Create ChatPrivileges object (remove can_manage_topics)
     privileges = ChatPrivileges(
         can_change_info=True,
         can_delete_messages=True,
@@ -34,7 +34,7 @@ async def promote(client, message: Message):
         can_manage_video_chats=False,
         can_post_messages=False,
         can_edit_messages=False,
-        can_manage_topics=True
+        is_anonymous=False
     )
 
     try:
