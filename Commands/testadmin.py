@@ -1,5 +1,6 @@
 from pyrogram import filters
 from pyrogram.handlers import MessageHandler
+from pyrogram.enums import ChatMemberStatus
 from . import utils
 
 COMMAND_INFO = {
@@ -33,10 +34,23 @@ async def handler(client, message):
         status_lines = []
         status_lines.append("\n✅ MEMBER STATUS:")
         status_lines.append(f"├─ Status: {member.status}")
-        status_lines.append(f"├─ Is Admin (raw): {member.status in ('administrator', 'creator')}")
+        status_lines.append(f"├─ Status Type: {type(member.status)}")
+        status_lines.append(f"├─ Status == OWNER: {member.status == ChatMemberStatus.OWNER}")
+        status_lines.append(f"├─ Status == ADMINISTRATOR: {member.status == ChatMemberStatus.ADMINISTRATOR}")
+        status_lines.append(f"├─ Status in tuple: {member.status in (ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR)}")
+        status_lines.append(f"├─ Is Admin (raw): {member.status in (ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR)}")
         status_lines.append(f"└─ Is Admin (utils): {await utils.is_group_admin(client, message)}")
         
         await message.reply_text("\n".join(status_lines))
+        
+        # Show what ChatMemberStatus.OWNER actually is
+        debug_lines = []
+        debug_lines.append("\n🔧 ENUM DEBUG:")
+        debug_lines.append(f"├─ ChatMemberStatus.OWNER = {ChatMemberStatus.OWNER}")
+        debug_lines.append(f"├─ ChatMemberStatus.ADMINISTRATOR = {ChatMemberStatus.ADMINISTRATOR}")
+        debug_lines.append(f"└─ Type: {type(ChatMemberStatus.OWNER)}")
+        
+        await message.reply_text("\n".join(debug_lines))
         
     except Exception as e:
         error_msg = f"❌ ERROR:\n{type(e).__name__}: {e}"
