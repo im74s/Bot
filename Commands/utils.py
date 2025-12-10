@@ -1,4 +1,5 @@
 import logging
+from pyrogram.enums import ChatMemberStatus
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ async def is_group_admin(client, message):
                 return True
         
         logger.debug(
-            f"is_group_admin: message.from_user is None (anonymous admin or channel sender). "
+            f"is_group_admin: message.from_user is None. "
             f"chat_id={chat.id} message_id={getattr(message, 'id', None)}"
         )
         return False
@@ -33,14 +34,15 @@ async def is_group_admin(client, message):
     try:
         member = await client.get_chat_member(chat.id, user.id)
         status = member.status
-        is_admin = status in ("administrator", "creator")
+        
+        # FIX: Check against the actual enum values, not strings!
+        is_admin = status in (ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR)
         
         # Detailed logging for debugging
         logger.info(
             f"Admin check: "
             f"user_id={user.id}, "
             f"username={user.username or 'N/A'}, "
-            f"first_name={user.first_name or 'N/A'}, "
             f"status={status}, "
             f"is_admin={is_admin}, "
             f"chat_id={chat.id}"
@@ -53,11 +55,8 @@ async def is_group_admin(client, message):
         logger.error(
             f"is_group_admin: get_chat_member FAILED! "
             f"user_id={user.id}, "
-            f"username={user.username or 'N/A'}, "
             f"chat_id={chat.id}, "
-            f"chat_title={chat.title or 'N/A'}, "
             f"error={type(e).__name__}: {e}"
         )
         
-        # Return False on error (the bot might not have proper permissions)
         return False
