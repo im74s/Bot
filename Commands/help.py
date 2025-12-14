@@ -1,4 +1,5 @@
 from pyrogram import filters
+from . import register_all
 
 def register(app):
     @app.on_message(filters.command("help") & (filters.private | filters.group))
@@ -7,16 +8,15 @@ def register(app):
 
         if len(args) > 1:
             query = args[1].strip().lower()
-            from . import register_all
+
             for cmd in register_all.USER_COMMANDS + register_all.ADMIN_COMMANDS:
                 if cmd["name"].lstrip("/").lower() == query.lstrip("/"):
-                    text = (
+                    await message.reply_text(
                         f"{cmd['name']} - {cmd['desc']}\n"
                         f"Usage: {cmd['usage']}\n"
                         f"Scope: {cmd['scope']}\n"
                         f"Example: {cmd['example']}"
                     )
-                    await message.reply_text(text)
                     return
 
             await message.reply_text("Command not found.")
