@@ -20,6 +20,7 @@ _USER_MODULES = [
     "quote",
     "meme",
     "avatar",
+    "help",
     "stats",
     "uptime",
     "calc",
