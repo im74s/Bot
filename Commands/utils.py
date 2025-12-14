@@ -1,62 +1,30 @@
-import logging
 from pyrogram.enums import ChatMemberStatus
 
-logger = logging.getLogger(__name__)
+def admin_only(func):
+    async def wrapper(client, message):
+        if message.chat.type not in ("group", "supergroup"):
+            await message.reply_text("This command only works in groups.")
+            return
 
-async def is_group_admin(client, message):
-    """
-    Returns True if message is in a group/supergroup and sender is an admin or creator.
-    """
-    chat = message.chat
-    
-    # Check if this is a group or supergroup
-    if chat.type not in ("group", "supergroup"):
-        logger.debug(f"Not a group: chat_type={chat.type}")
-        return False
+        if message.sender_chat:
+            return await func(client, message)
 
-    user = message.from_user
-    
-    # Handle cases where from_user is None (anonymous admin or channel)
-    if not user:
-        # Check if it's an anonymous admin
-        if hasattr(message, 'sender_chat') and message.sender_chat:
-            if message.sender_chat.id == chat.id:
-                logger.info(f"Anonymous admin detected in chat {chat.id}")
-                return True
-        
-        logger.debug(
-            f"is_group_admin: message.from_user is None. "
-            f"chat_id={chat.id} message_id={getattr(message, 'id', None)}"
-        )
-        return False
+        if not message.from_user:
+            await message.reply_text("Anonymous admins are not supported.")
+            return
 
-    # Try to get the member status
-    try:
-        member = await client.get_chat_member(chat.id, user.id)
-        status = member.status
-        
-        # FIX: Check against the actual enum values, not strings!
-        is_admin = status in (ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR)
-        
-        # Detailed logging for debugging
-        logger.info(
-            f"Admin check: "
-            f"user_id={user.id}, "
-            f"username={user.username or 'N/A'}, "
-            f"status={status}, "
-            f"is_admin={is_admin}, "
-            f"chat_id={chat.id}"
+        member = await client.get_chat_member(
+            message.chat.id,
+            message.from_user.id
         )
-        
-        return is_admin
-        
-    except Exception as e:
-        # Log the error with full details
-        logger.error(
-            f"is_group_admin: get_chat_member FAILED! "
-            f"user_id={user.id}, "
-            f"chat_id={chat.id}, "
-            f"error={type(e).__name__}: {e}"
-        )
-        
-        return False
+
+        if member.status not in (
+            ChatMemberStatus.ADMINISTRATOR,
+            ChatMemberStatus.OWNER
+        ):
+            await message.reply_text("Admins only.")
+            return
+
+        return await func(client, message)
+
+    return wrapper
