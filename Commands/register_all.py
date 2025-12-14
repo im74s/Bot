@@ -1,12 +1,12 @@
-# This module imports each command module, collects its COMMAND_INFO and registers it.
-from . import utils
+import importlib
+from pyrogram import filters
+from .utils import admin_only
 
 USER_COMMANDS = []
 ADMIN_COMMANDS = []
 
-# List of command module names to import and register
 _USER_MODULES = [
-    "testadmin",
+    "help",
     "start",
     "ping",
     "echo",
@@ -20,7 +20,6 @@ _USER_MODULES = [
     "quote",
     "meme",
     "avatar",
-    "help",
     "stats",
     "uptime",
     "calc",
@@ -43,52 +42,51 @@ _USER_MODULES = [
 _ADMIN_MODULES = [
     "ban",
     "kick",
-    "promote",
-    "demote",
-    "pin",
-    "unpin",
     "mute",
     "unmute",
+    "promote",
+    "demote",
+    "unban",
+    "pin",
+    "unpin",
     "warn",
     "unwarn",
-    "setwelcome",
-    "delwelcome",
-    "broadcast",
-    "lockdown",
-    "unlock",
-    "setrules",
-    "delrules",
-    "getadmins",
-    "muteall",
-    "unmuteall",
     "clean",
     "purge",
     "delmsg",
-    "addmod",
-    "removemod",
-    "setlog",
-    "getlog",
-    "restart",
-    "evalcmd",
-    "groupstats",
+    "lockdown",
+    "unlock",
+    "muteall",
+    "unmuteall",
 ]
 
 def register(app):
-    import importlib
     global USER_COMMANDS, ADMIN_COMMANDS
     USER_COMMANDS = []
     ADMIN_COMMANDS = []
-    # import user modules
-    for m in _USER_MODULES:
-        mod = importlib.import_module(f"Commands.{m}")
+
+    # Register user commands normally
+    for name in _USER_MODULES:
+        mod = importlib.import_module(f"Commands.{name}")
         if hasattr(mod, "COMMAND_INFO"):
             USER_COMMANDS.append(mod.COMMAND_INFO)
         if hasattr(mod, "register"):
             mod.register(app)
-    # import admin modules
-    for m in _ADMIN_MODULES:
-        mod = importlib.import_module(f"Commands.{m}")
+
+    # Register admin commands centrally
+    for name in _ADMIN_MODULES:
+        mod = importlib.import_module(f"Commands.{name}")
+
         if hasattr(mod, "COMMAND_INFO"):
             ADMIN_COMMANDS.append(mod.COMMAND_INFO)
-        if hasattr(mod, "register"):
-            mod.register(app)
+
+        handler = getattr(mod, "handler", None)
+        if not handler:
+            continue
+
+        command = mod.COMMAND_INFO["name"].lstrip("/")
+
+        @app.on_message(filters.command(command) & filters.group)
+        @admin_only
+        async def admin_wrapper(client, message, _handler=handler):
+            await _handler(client, message)
